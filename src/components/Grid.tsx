@@ -1,8 +1,11 @@
 import React, { useCallback, useRef, useState } from "react";
 import produce from "immer";
-import { Settings } from "./Settings";
+import { SettingsBoard } from "./SettingsBoard";
 
-interface Props {}
+interface GridProps {
+  pattern: Pattern;
+  settings: Settings;
+}
 
 const numRows = 50;
 const numCols = 50;
@@ -27,7 +30,7 @@ const operations = [
   [-1, 0],
 ];
 
-export const Grid: React.FC<Props> = () => {
+export const Grid: React.FC<GridProps> = () => {
   const [grid, setGrid] = useState(() => {
     return generateEmptyGrid();
   });
