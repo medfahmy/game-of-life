@@ -1,23 +1,11 @@
 import React, { useCallback, useRef, useState } from "react";
-import produce from "immer";
-import { SettingsBoard } from "./SettingsBoard";
+import produce, { PatchListener } from "immer";
+import { SettingsBoard } from "./settings-board";
+import { createEmptyGrid, Pattern } from "game";
 
 interface GridProps {
-  pattern: Pattern;
-  settings: Settings;
+  initialPattern: Pattern;
 }
-
-const numRows = 50;
-const numCols = 50;
-
-const generateEmptyGrid = () => {
-  const rows = [];
-  for (let i = 0; i < numRows; i++) {
-    rows.push(Array.from(Array(numCols), () => 0));
-  }
-
-  return rows;
-};
 
 const operations = [
   [0, 1],
@@ -30,10 +18,11 @@ const operations = [
   [-1, 0],
 ];
 
-export const Grid: React.FC<GridProps> = () => {
-  const [grid, setGrid] = useState(() => {
-    return generateEmptyGrid();
-  });
+export const Grid: React.FC<GridProps> = ({ initialPattern }) => {
+  const [pattern, setPattern] = useState(initialPattern);
+
+  const size = initialPattern.length;
+  const emptyPattern = createEmptyGrid(size);
 
   const [running, setRunning] = useState(false);
 
@@ -45,15 +34,15 @@ export const Grid: React.FC<GridProps> = () => {
       return;
     }
 
-    setGrid((g) => {
+    setPattern((g) => {
       return produce(g, (gridCopy) => {
-        for (let i = 0; i < numRows; i++) {
-          for (let j = 0; j < numCols; j++) {
+        for (let i = 0; i < size; i++) {
+          for (let j = 0; j < size; j++) {
             let neighbors = 0;
             operations.forEach(([x, y]) => {
               const newI = i + x;
               const newJ = j + y;
-              if (newI >= 0 && newI < numRows && newJ >= 0 && newJ < numCols) {
+              if (newI >= 0 && newI < size && newJ >= 0 && newJ < size) {
                 neighbors += g[newI][newJ];
               }
             });
@@ -87,7 +76,7 @@ export const Grid: React.FC<GridProps> = () => {
 
       <button
         onClick={() => {
-          setGrid(generateEmptyGrid());
+          setPattern(emptyPattern);
         }}
       >
         clear
@@ -96,13 +85,13 @@ export const Grid: React.FC<GridProps> = () => {
       <button
         onClick={() => {
           const rows = [];
-          for (let i = 0; i < numRows; i++) {
+          for (let i = 0; i < size; i++) {
             rows.push(
-              Array.from(Array(numCols), () => (Math.random() > 0.7 ? 1 : 0))
+              Array.from(Array(size), () => (Math.random() > 0.7 ? 1 : 0))
             );
           }
 
-          setGrid(rows);
+          setPattern(rows);
         }}
       >
         random
@@ -111,31 +100,29 @@ export const Grid: React.FC<GridProps> = () => {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: `repeat(${numCols}, 20px)`,
+          gridTemplateColumns: `repeat(${size}, 20px)`,
         }}
       >
-        {grid.map((rows, i) =>
+        {pattern.map((rows, i) =>
           rows.map((col, j) => (
             <div
               key={`${i}-${j}`}
               onClick={() => {
-                const newGrid = produce(grid, (gridCopy) => {
-                  gridCopy[i][j] = grid[i][j] ? 0 : 1;
+                const newGrid = produce(pattern, (gridCopy) => {
+                  gridCopy[i][j] = pattern[i][j] ? 0 : 1;
                 });
-                setGrid(newGrid);
+                setPattern(newGrid);
               }}
               style={{
                 width: 20,
                 height: 20,
-                backgroundColor: grid[i][j] ? "blue" : undefined,
+                backgroundColor: pattern[i][j] ? "blue" : undefined,
                 border: "solid 1px black",
               }}
             ></div>
           ))
         )}
       </div>
-
-      <Settings />
     </>
   );
 };
